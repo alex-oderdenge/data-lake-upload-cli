@@ -6,7 +6,8 @@ import {
     Typography, 
     LinearProgress,
     Alert,
-    Chip
+    Chip,
+    Snackbar
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
@@ -24,6 +25,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [errorOpen, setErrorOpen] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     const handleUpload = async () => {
         if (!selectedFile) return;
@@ -34,13 +38,37 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             const result = await FileService.uploadFile(selectedFile);
             onUploadSuccess?.(result);
             setSelectedFile(null);
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+            
+            // Show success toast
+            setToastMessage(`Arquivo "${selectedFile.name}" enviado com sucesso!`);
+            setSuccessOpen(true);
+            
+        } catch (error: any) {
+            let backendMessage = 'Falha no upload';
+            
+            // Extract error message from backend response
+            if (error?.response?.data?.message) {
+                backendMessage = error.response.data.message;
+            } else if (error?.message) {
+                backendMessage = error.message;
+            }
+            
+            const errorMessage = `Erro ao fazer upload de arquivo: ${backendMessage}`;
             setError(errorMessage);
+            setToastMessage(errorMessage);
+            setErrorOpen(true);
             onUploadError?.(error as Error);
         } finally {
             setIsUploading(false);
         }
+    };
+
+    const handleCloseSuccess = () => {
+        setSuccessOpen(false);
+    };
+
+    const handleCloseError = () => {
+        setErrorOpen(false);
     };
 
     return (
@@ -114,6 +142,40 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                     {isUploading ? 'Uploading...' : 'Upload to Data Lake'}
                 </Button>
             </Box>
+
+            {/* Success Toast */}
+            <Snackbar
+                open={successOpen}
+                autoHideDuration={4000}
+                onClose={handleCloseSuccess}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert 
+                    onClose={handleCloseSuccess} 
+                    severity="success" 
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {toastMessage}
+                </Alert>
+            </Snackbar>
+
+            {/* Error Toast */}
+            <Snackbar
+                open={errorOpen}
+                autoHideDuration={6000}
+                onClose={handleCloseError}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert 
+                    onClose={handleCloseError} 
+                    severity="error" 
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {toastMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
