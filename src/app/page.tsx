@@ -7,10 +7,10 @@ export default function Home() {
     <Container maxWidth="md">
       <Box sx={{ py: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom>
-          Welcome to Data Lake Upload CLI
+          Data Lake Upload CLI
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Your gateway to seamless data lake uploads.
+          Faça upload de arquivos para o Data Lake para serem utilizados no pipeline de migração de dados
         </Typography>
         
         <Paper sx={{ p: 3 }}>
