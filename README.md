@@ -1,8 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Data Lake Upload CLI
 
-## Getting Started
+A modern Next.js web application for uploading files to a Data Lake with comprehensive metadata management. This application provides a user-friendly interface for managing customers, dataset keys, and file uploads with detailed metadata tracking.
 
-First, run the development server:
+## 🚀 Features
+
+- **File Upload with Metadata**: Upload files with comprehensive metadata using the new DTO parameter structure
+- **Customer Management**: Create and manage customers with full CRUD operations
+- **Dataset Key Management**: Create and manage dataset keys linked to customers
+- **File Versioning**: Track file versions with automatic version numbering
+- **Data Lake File Levels**: Support for raw, clean, and standardized file levels
+- **Modern UI**: Built with Material-UI for a professional user experience
+- **Real-time Feedback**: Toast notifications and progress indicators
+
+## 📋 Prerequisites
+
+- **Node.js 18+**
+- **npm, yarn, pnpm, or bun**
+- **Data Lake Gateway API** running on `http://localhost:8080`
+
+## 🚀 Getting Started
+
+### 1. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### 2. Start the Development Server
 
 ```bash
 npm run dev
@@ -14,23 +44,264 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Open the Application
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📁 File Upload with New DTO Parameter
 
-## Learn More
+The application now supports uploading files with comprehensive metadata using the new `FilePropertiesDto` parameter structure. This allows for better tracking and organization of files in the data lake.
 
-To learn more about Next.js, take a look at the following resources:
+### 🔄 API Format Update
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The file upload endpoint now expects **individual form fields** instead of a JSON string for the file properties. This change was made to fix Spring Boot conversion errors.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**New Format**: Each property is sent as a separate form field using dot notation for nested objects (e.g., `customer.id`, `fileVersion.versionNumber`).
 
-## Deploy on Vercel
+**Important Type Conversions**:
+- `dataLakeFileLevel`: Must be uppercase (RAW, CLEAN, STANDARDIZED)
+- `uploadedAt`/`fileCreatedAt`: Must be in LocalDateTime format (YYYY-MM-DDTHH:mm:ss)
+- `fileVersion.id`: Omitted if null/undefined (backend auto-generates)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Example API Request Format
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+curl -X POST http://localhost:8080/api/v1/files/upload \
+  -F "file=@/path/to/test.csv" \
+  -F "fileName=test_file.csv" \
+  -F "originalFileName=original.csv" \
+  -F "contentType=text/csv" \
+  -F "fileExtension=.csv" \
+  -F "sizeInBytes=1024" \
+  -F "dataLakeFileLevel=CLEAN" \
+  -F "customer.id=1" \
+  -F "customer.name=Test Customer" \
+  -F "fileVersion.versionNumber=1" \
+  -F "datasetKey.id=1" \
+  -F "datasetKey.name=test_dataset" \
+  -F "uploadedAt=2025-01-15T10:30:00" \
+  -F "fileCreatedAt=2025-01-15T10:30:00"
+```
+
+### How to Upload Files
+
+1. **Select a File**: Click "Choose File to Upload" to select your file
+2. **Select or Create Customer**: 
+   - Choose from existing customers in the dropdown
+   - Click "New" to create a new customer
+3. **Select or Create Dataset Key**:
+   - Choose from existing dataset keys
+   - Click "New" to create a new dataset key
+4. **Configure File Properties**:
+   - Set the version number (defaults to 1)
+   - Choose the data lake file level (raw, clean, or standardized)
+5. **Upload**: Click "Upload to Data Lake" to upload with metadata
+
+### File Properties DTO Structure
+
+The application automatically creates a `FilePropertiesDto` with the following structure:
+
+```typescript
+interface FilePropertiesDto {
+  fileName: string;                    // Name of the file
+  originalFileName: string;            // Original uploaded file name
+  contentType?: string;                // MIME type of the file
+  fileExtension?: string;              // File extension
+  sizeInBytes: number;                 // File size in bytes
+  customer: {                          // Customer information
+    id: number;
+    name: string;
+    description?: string;
+    pathName?: string;
+  };
+  fileVersion: {                       // Version information
+    id?: number;                       // Auto-generated by API
+    versionNumber: number;
+    description?: string;
+  };
+  dataLakeFileLevel: 'raw' | 'clean' | 'standardized';
+  metadata?: Record<string, any>;      // Additional metadata
+  uploadedAt?: string;                 // Upload timestamp
+  fileCreatedAt?: string;              // File creation timestamp
+  datasetKey?: {                       // Dataset key information
+    id: number;
+    name: string;
+    description?: string;
+    pathName?: string;
+  };
+  uploadedMonth?: string;              // Month when uploaded
+}
+```
+
+### Data Lake File Levels
+
+- **Raw**: Raw data exactly as received from the source
+- **Clean**: Data that has been converted or unified for easier processing
+- **Standardized**: Harmonized data ready for consumption and integration
+
+### Customer Management
+
+#### Creating a New Customer
+
+1. Click the "New" button next to the Customer dropdown
+2. Fill in the required fields:
+   - **Name**: Customer name (required)
+   - **Email**: Customer email (required)
+   - **Description**: Optional description
+   - **Path Name**: Optional path identifier
+3. Click "Create" to save the customer
+
+#### Customer Fields
+
+- **Name**: The display name of the customer
+- **Email**: Contact email for the customer
+- **Description**: Additional information about the customer
+- **Path Name**: URL-friendly identifier for the customer
+
+### Dataset Key Management
+
+#### Creating a New Dataset Key
+
+1. Click the "New" button next to the Dataset Key dropdown
+2. Fill in the required fields:
+   - **Name**: Dataset key name (required)
+   - **Description**: Optional description
+   - **Path Name**: Optional path identifier
+   - **Customer**: Select the associated customer (optional)
+3. Click "Create" to save the dataset key
+
+#### Dataset Key Fields
+
+- **Name**: The display name of the dataset key
+- **Description**: Additional information about the dataset
+- **Path Name**: URL-friendly identifier for the dataset
+- **Customer**: The customer this dataset belongs to (optional)
+
+## 🔧 API Integration
+
+The application integrates with the Data Lake Gateway API running on `http://localhost:8080`. The following endpoints are used:
+
+### File Upload
+- **POST** `/api/v1/files/upload` - Upload file with metadata
+
+### Customer Management
+- **GET** `/api/customers` - List all customers
+- **POST** `/api/customers` - Create new customer
+- **GET** `/api/customers/{id}` - Get customer by ID
+- **PUT** `/api/customers/{id}` - Update customer
+- **DELETE** `/api/customers/{id}` - Delete customer
+
+### Dataset Key Management
+- **GET** `/api/dataset-keys` - List all dataset keys
+- **POST** `/api/dataset-keys` - Create new dataset key
+- **GET** `/api/dataset-keys/{id}` - Get dataset key by ID
+- **PUT** `/api/dataset-keys/{id}` - Update dataset key
+- **DELETE** `/api/dataset-keys/{id}` - Delete dataset key
+
+## 🛠️ Configuration
+
+The application configuration is located in `src/config.ts`:
+
+```typescript
+const config = {
+  backendUrl: 'http://localhost:8080',  // Data Lake Gateway API URL
+  endpoints: {
+    FileController: {
+      upload: '/api/v1/files/upload'
+    },
+    CustomerController: {
+      list: '/api/customers',
+      create: '/api/customers',
+      // ... other endpoints
+    },
+    DatasetKeyController: {
+      list: '/api/dataset-keys',
+      create: '/api/dataset-keys',
+      // ... other endpoints
+    }
+  }
+};
+```
+
+## 📱 User Interface
+
+The application features a modern, responsive interface with:
+
+- **Card-based Layout**: Organized sections for different functionalities
+- **Material-UI Components**: Professional design with consistent styling
+- **Responsive Design**: Works on desktop and mobile devices
+- **Real-time Feedback**: Toast notifications for success and error states
+- **Progress Indicators**: Visual feedback during file uploads
+- **Form Validation**: Input validation and error handling
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **Backend Connection Issues**
+   - Ensure the Data Lake Gateway API is running on `http://localhost:8080`
+   - Check the backend URL in `src/config.ts`
+
+2. **File Upload Failures**
+   - Verify that a customer and dataset key are selected
+   - Check that the file is not too large
+   - Ensure the backend API is accessible
+
+3. **Customer/Dataset Creation Issues**
+   - Verify all required fields are filled
+   - Check that the customer email is valid
+   - Ensure the dataset key name is unique
+
+### Error Messages
+
+The application provides detailed error messages for:
+- Missing required selections (file, customer, dataset key)
+- Backend API errors
+- Network connectivity issues
+- Validation errors
+
+## 🚀 Deployment
+
+### Build for Production
+
+```bash
+npm run build
+# or
+yarn build
+# or
+pnpm build
+# or
+bun build
+```
+
+### Start Production Server
+
+```bash
+npm start
+# or
+yarn start
+# or
+pnpm start
+# or
+bun start
+```
+
+## 📚 Learn More
+
+To learn more about the technologies used:
+
+- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
+- [Material-UI Documentation](https://mui.com/) - Learn about Material-UI components
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Learn about TypeScript
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
