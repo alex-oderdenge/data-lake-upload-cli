@@ -51,14 +51,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [selectedDatasetKey, setSelectedDatasetKey] = useState<DatasetKey | null>(null);
     const [versionNumber, setVersionNumber] = useState<number>(1);
+    const [versionDescription, setVersionDescription] = useState<string>('');
     const [dataLakeFileLevel, setDataLakeFileLevel] = useState<'raw' | 'clean' | 'standardized'>('raw');
     const [metadata, setMetadata] = useState<Record<string, any>>({});
 
     // Dialog states
     const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
     const [datasetDialogOpen, setDatasetDialogOpen] = useState(false);
-    const [newCustomer, setNewCustomer] = useState({ name: '', email: '', description: '', pathName: '' });
-    const [newDatasetKey, setNewDatasetKey] = useState({ name: '', description: '', pathName: '', customerId: 0 });
+    const [newCustomer, setNewCustomer] = useState({ name: '', description: '', pathName: '' });
+    const [newDatasetKey, setNewDatasetKey] = useState({ name: '', description: '', pathName: '' });
 
     // Load customers and dataset keys on component mount
     useEffect(() => {
@@ -86,7 +87,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
     const handleUpload = async () => {
         if (!selectedFile || !selectedCustomer || !selectedDatasetKey) {
-            setError('Please select a file, customer, and dataset key');
+            setError('Por favor, selecione um arquivo, cliente e chave de dataset');
             return;
         }
 
@@ -109,7 +110,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 },
                 versionNumber,
                 dataLakeFileLevel,
-                metadata
+                metadata,
+                versionDescription
             );
 
             const result = await FileService.uploadFile(selectedFile, fileProperties);
@@ -117,11 +119,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             setSelectedFile(null);
             
             // Show success toast
-            setToastMessage(`File "${selectedFile.name}" uploaded successfully!`);
+            setToastMessage(`Arquivo "${selectedFile.name}" enviado com sucesso!`);
             setSuccessOpen(true);
             
         } catch (error: any) {
-            let backendMessage = 'Upload failed';
+            let backendMessage = 'Falha no upload';
             
             // Extract error message from backend response
             if (error?.response?.data?.message) {
@@ -130,7 +132,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 backendMessage = error.message;
             }
             
-            const errorMessage = `Error uploading file: ${backendMessage}`;
+            const errorMessage = `Erro ao fazer upload do arquivo: ${backendMessage}`;
             setError(errorMessage);
             setToastMessage(errorMessage);
             setErrorOpen(true);
@@ -155,7 +157,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             setCustomers([...customers, customer]);
             setSelectedCustomer(customer);
             setCustomerDialogOpen(false);
-            setNewCustomer({ name: '', email: '', description: '', pathName: '' });
+            setNewCustomer({ name: '', description: '', pathName: '' });
         } catch (error) {
             console.error('Failed to create customer:', error);
         }
@@ -164,15 +166,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     // Dataset dialog handlers
     const handleCreateDatasetKey = async () => {
         try {
-            const datasetKeyData = {
-                ...newDatasetKey,
-                customerId: newDatasetKey.customerId || undefined
-            };
-            const datasetKey = await DatasetKeyService.createDatasetKey(datasetKeyData);
+            const datasetKey = await DatasetKeyService.createDatasetKey(newDatasetKey);
             setDatasetKeys([...datasetKeys, datasetKey]);
             setSelectedDatasetKey(datasetKey);
             setDatasetDialogOpen(false);
-            setNewDatasetKey({ name: '', description: '', pathName: '', customerId: 0 });
+            setNewDatasetKey({ name: '', description: '', pathName: '' });
         } catch (error) {
             console.error('Failed to create dataset key:', error);
         }
@@ -191,36 +189,36 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 <Card>
                     <CardContent>
                         <Typography variant="h6" gutterBottom>
-                            File Selection
+                            Seleção de Arquivo
                         </Typography>
-                <Button
-                    component="label"
-                    variant="outlined"
-                    startIcon={<AttachFileIcon />}
-                    disabled={isUploading}
-                    sx={{ 
-                        py: 1.5,
-                        borderStyle: 'dashed',
-                        borderWidth: 2,
-                        '&:hover': {
-                            borderStyle: 'dashed',
-                            borderWidth: 2,
-                        }
-                    }}
-                >
-                    Choose File to Upload
-                    <input
-                        type="file"
-                        hidden
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                        disabled={isUploading}
-                    />
-                </Button>
+                            <Button
+                                component="label"
+                                variant="outlined"
+                                startIcon={<AttachFileIcon />}
+                                disabled={isUploading}
+                                sx={{ 
+                                    py: 1.5,
+                                    borderStyle: 'dashed',
+                                    borderWidth: 2,
+                                    '&:hover': {
+                                        borderStyle: 'dashed',
+                                        borderWidth: 2,
+                                    }
+                                }}
+                            >
+                                Escolher Arquivo para Upload
+                                <input
+                                    type="file"
+                                    hidden
+                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    disabled={isUploading}
+                                />
+                            </Button>
                 
                 {selectedFile && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
                         <Typography variant="body2" color="text.secondary">
-                            Selected:
+                            Selecionado:
                         </Typography>
                         <Chip
                             icon={<AttachFileIcon />}
@@ -239,25 +237,25 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                         <CardContent>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                                 <Typography variant="h6">
-                                    Customer
+                                    Cliente
                                 </Typography>
                                 <Button
                                     size="small"
                                     startIcon={<AddIcon />}
                                     onClick={() => setCustomerDialogOpen(true)}
                                 >
-                                    New
+                                    Novo
                                 </Button>
                             </Box>
                             <FormControl fullWidth>
-                                <InputLabel>Select Customer</InputLabel>
+                                <InputLabel>Selecionar Cliente</InputLabel>
                                 <Select
                                     value={selectedCustomer?.id || ''}
                                     onChange={(e) => {
                                         const customer = customers.find(c => c.id === e.target.value);
                                         setSelectedCustomer(customer || null);
                                     }}
-                                    label="Select Customer"
+                                    label="Selecionar Cliente"
                                 >
                                     {customers.map((customer) => (
                                         <MenuItem key={customer.id} value={customer.id}>
@@ -273,25 +271,25 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                         <CardContent>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                                 <Typography variant="h6">
-                                    Dataset Key
+                                    Chave de Dataset
                                 </Typography>
                                 <Button
                                     size="small"
                                     startIcon={<AddIcon />}
                                     onClick={() => setDatasetDialogOpen(true)}
                                 >
-                                    New
+                                    Novo
                                 </Button>
                             </Box>
                             <FormControl fullWidth>
-                                <InputLabel>Select Dataset Key</InputLabel>
+                                <InputLabel>Selecionar Chave de Dataset</InputLabel>
                                 <Select
                                     value={selectedDatasetKey?.id || ''}
                                     onChange={(e) => {
                                         const datasetKey = datasetKeys.find(d => d.id === e.target.value);
                                         setSelectedDatasetKey(datasetKey || null);
                                     }}
-                                    label="Select Dataset Key"
+                                    label="Selecionar Chave de Dataset"
                                 >
                                     {datasetKeys.map((datasetKey) => (
                                         <MenuItem key={datasetKey.id} value={datasetKey.id}>
@@ -308,29 +306,42 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 <Card>
                     <CardContent>
                         <Typography variant="h6" gutterBottom>
-                            File Properties
+                            Propriedades do Arquivo
                         </Typography>
-                        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                            <TextField
-                                label="Version Number"
-                                type="number"
-                                value={versionNumber}
-                                onChange={(e) => setVersionNumber(parseInt(e.target.value) || 1)}
-                                inputProps={{ min: 1 }}
-                                sx={{ minWidth: 200 }}
-                            />
-                            <FormControl sx={{ minWidth: 200 }}>
-                                <InputLabel>Data Lake File Level</InputLabel>
-                                <Select
-                                    value={dataLakeFileLevel}
-                                    onChange={(e) => setDataLakeFileLevel(e.target.value as 'raw' | 'clean' | 'standardized')}
-                                    label="Data Lake File Level"
-                                >
-                                    <MenuItem value="raw">Raw</MenuItem>
-                                    <MenuItem value="clean">Clean</MenuItem>
-                                    <MenuItem value="standardized">Standardized</MenuItem>
-                                </Select>
-                            </FormControl>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                <TextField
+                                    label="Número da Versão"
+                                    type="number"
+                                    value={versionNumber}
+                                    onChange={(e) => setVersionNumber(parseInt(e.target.value) || 1)}
+                                    inputProps={{ min: 1 }}
+                                    sx={{ minWidth: 200 }}
+                                />
+                                <FormControl sx={{ minWidth: 200 }}>
+                                    <InputLabel>Nível do Arquivo no Data Lake</InputLabel>
+                                    <Select
+                                        value={dataLakeFileLevel}
+                                        onChange={(e) => setDataLakeFileLevel(e.target.value as 'raw' | 'clean' | 'standardized')}
+                                        label="Nível do Arquivo no Data Lake"
+                                    >
+                                        <MenuItem value="raw">RAW</MenuItem>
+                                        <MenuItem value="clean">CLEAN</MenuItem>
+                                        <MenuItem value="standardized">STANDARDIZED</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Box>
+                            {versionNumber > 1 && (
+                                <TextField
+                                    fullWidth
+                                    label="Descrição da Versão"
+                                    placeholder="Indique o que mudou nessa versão"
+                                    value={versionDescription}
+                                    onChange={(e) => setVersionDescription(e.target.value)}
+                                    multiline
+                                    rows={2}
+                                />
+                            )}
                         </Box>
                     </CardContent>
                 </Card>
@@ -342,34 +353,34 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                             <Box sx={{ width: '100%', mb: 2 }}>
                         <LinearProgress />
                         <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-                            Uploading...
+                            Fazendo Upload...
                         </Typography>
                     </Box>
                 )}
 
-                <Button
-                    variant="contained"
-                    onClick={handleUpload}
+                        <Button
+                            variant="contained"
+                            onClick={handleUpload}
                             disabled={!selectedFile || !selectedCustomer || !selectedDatasetKey || isUploading}
-                    startIcon={<CloudUploadIcon />}
-                    sx={{ py: 1.5 }}
-                    size="large"
+                            startIcon={<CloudUploadIcon />}
+                            sx={{ py: 1.5 }}
+                            size="large"
                             fullWidth
-                >
-                    {isUploading ? 'Uploading...' : 'Upload to Data Lake'}
-                </Button>
+                        >
+                            {isUploading ? 'Fazendo Upload...' : 'Upload para Data Lake'}
+                        </Button>
                     </CardContent>
                 </Card>
             </Box>
 
             {/* Create Customer Dialog */}
             <Dialog open={customerDialogOpen} onClose={() => setCustomerDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Create New Customer</DialogTitle>
+                <DialogTitle>Criar Novo Cliente</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 1 }}>
                         <TextField
                             fullWidth
-                            label="Name"
+                            label="Nome"
                             value={newCustomer.name}
                             onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
                             margin="normal"
@@ -377,23 +388,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                         />
                         <TextField
                             fullWidth
-                            label="Email"
-                            type="email"
-                            value={newCustomer.email}
-                            onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
-                            margin="normal"
-                            required
-                        />
-                        <TextField
-                            fullWidth
-                            label="Description"
+                            label="Descrição"
                             value={newCustomer.description}
                             onChange={(e) => setNewCustomer({...newCustomer, description: e.target.value})}
                             margin="normal"
                         />
                         <TextField
                             fullWidth
-                            label="Path Name"
+                            label="Nome do Caminho"
                             value={newCustomer.pathName}
                             onChange={(e) => setNewCustomer({...newCustomer, pathName: e.target.value})}
                             margin="normal"
@@ -401,21 +403,21 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setCustomerDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleCreateCustomer} variant="contained" disabled={!newCustomer.name || !newCustomer.email}>
-                        Create
+                    <Button onClick={() => setCustomerDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleCreateCustomer} variant="contained" disabled={!newCustomer.name}>
+                        Criar
                     </Button>
                 </DialogActions>
             </Dialog>
 
             {/* Create Dataset Key Dialog */}
             <Dialog open={datasetDialogOpen} onClose={() => setDatasetDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Create New Dataset Key</DialogTitle>
+                <DialogTitle>Criar Nova Chave de Dataset</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 1 }}>
                         <TextField
                             fullWidth
-                            label="Name"
+                            label="Nome"
                             value={newDatasetKey.name}
                             onChange={(e) => setNewDatasetKey({...newDatasetKey, name: e.target.value})}
                             margin="normal"
@@ -423,41 +425,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                         />
                         <TextField
                             fullWidth
-                            label="Description"
+                            label="Descrição"
                             value={newDatasetKey.description}
                             onChange={(e) => setNewDatasetKey({...newDatasetKey, description: e.target.value})}
                             margin="normal"
                         />
                         <TextField
                             fullWidth
-                            label="Path Name"
+                            label="Nome do Caminho"
                             value={newDatasetKey.pathName}
                             onChange={(e) => setNewDatasetKey({...newDatasetKey, pathName: e.target.value})}
                             margin="normal"
                         />
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Customer (Optional)</InputLabel>
-                            <Select
-                                value={newDatasetKey.customerId || ''}
-                                onChange={(e) => setNewDatasetKey({...newDatasetKey, customerId: e.target.value as number})}
-                                label="Customer (Optional)"
-                            >
-                                <MenuItem value="">
-                                    <em>No Customer</em>
-                                </MenuItem>
-                                {customers.map((customer) => (
-                                    <MenuItem key={customer.id} value={customer.id}>
-                                        {customer.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDatasetDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={() => setDatasetDialogOpen(false)}>Cancelar</Button>
                     <Button onClick={handleCreateDatasetKey} variant="contained" disabled={!newDatasetKey.name}>
-                        Create
+                        Criar
                     </Button>
                 </DialogActions>
             </Dialog>

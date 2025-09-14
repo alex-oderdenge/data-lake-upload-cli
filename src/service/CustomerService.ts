@@ -7,7 +7,6 @@ const BASE_URL = config.backendUrl.replace(/\/$/, ""); // trim trailing slash
 export interface Customer {
   id?: number;
   name: string;
-  email: string;
   description?: string;
   pathName?: string;
   createdAt?: string;
@@ -16,7 +15,6 @@ export interface Customer {
 
 export interface CustomerCreateRequest {
   name: string;
-  email: string;
   description?: string;
   pathName?: string;
 }

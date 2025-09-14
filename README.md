@@ -94,6 +94,7 @@ curl -X POST http://localhost:8080/api/v1/files/upload \
    - Click "New" to create a new dataset key
 4. **Configure File Properties**:
    - Set the version number (defaults to 1)
+   - If version number is higher than 1, a version description field will appear
    - Choose the data lake file level (raw, clean, or standardized)
 5. **Upload**: Click "Upload to Data Lake" to upload with metadata
 
@@ -139,6 +140,14 @@ interface FilePropertiesDto {
 - **Clean**: Data that has been converted or unified for easier processing
 - **Standardized**: Harmonized data ready for consumption and integration
 
+### Version Management
+
+When uploading files with version numbers higher than 1, a version description field becomes available:
+
+- **Version 1**: Default version, no description required
+- **Version 2+**: Version description field appears with placeholder "Indique o que mudou nessa versão"
+- **Description**: Used to document what changed in this version of the file
+
 ### Customer Management
 
 #### Creating a New Customer
@@ -146,7 +155,6 @@ interface FilePropertiesDto {
 1. Click the "New" button next to the Customer dropdown
 2. Fill in the required fields:
    - **Name**: Customer name (required)
-   - **Email**: Customer email (required)
    - **Description**: Optional description
    - **Path Name**: Optional path identifier
 3. Click "Create" to save the customer
@@ -154,7 +162,6 @@ interface FilePropertiesDto {
 #### Customer Fields
 
 - **Name**: The display name of the customer
-- **Email**: Contact email for the customer
 - **Description**: Additional information about the customer
 - **Path Name**: URL-friendly identifier for the customer
 
@@ -167,7 +174,6 @@ interface FilePropertiesDto {
    - **Name**: Dataset key name (required)
    - **Description**: Optional description
    - **Path Name**: Optional path identifier
-   - **Customer**: Select the associated customer (optional)
 3. Click "Create" to save the dataset key
 
 #### Dataset Key Fields
@@ -175,7 +181,6 @@ interface FilePropertiesDto {
 - **Name**: The display name of the dataset key
 - **Description**: Additional information about the dataset
 - **Path Name**: URL-friendly identifier for the dataset
-- **Customer**: The customer this dataset belongs to (optional)
 
 ## 🔧 API Integration
 

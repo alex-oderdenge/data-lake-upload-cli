@@ -9,7 +9,6 @@ export interface DatasetKey {
   name: string;
   description?: string;
   pathName?: string;
-  customerId?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -18,7 +17,6 @@ export interface DatasetKeyCreateRequest {
   name: string;
   description?: string;
   pathName?: string;
-  customerId?: number;
 }
 
 export const DatasetKeyService = {

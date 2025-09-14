@@ -15,7 +15,7 @@ export default function Home() {
         
         <Paper sx={{ p: 3 }}>
           <Typography variant="h5" component="h2" gutterBottom>
-            File Upload
+            Upload de Arquivo
           </Typography>
           <FileUpload
             onUploadSuccess={(result) => console.log('Upload successful:', result)}

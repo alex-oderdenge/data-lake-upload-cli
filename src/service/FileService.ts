@@ -126,10 +126,11 @@ export const FileService = {
   createFileProperties: (
     file: File,
     customer: { id: number; name: string; description?: string; pathName?: string },
-    datasetKey: { id: number; name: string; description?: string; pathName?: string; customerId?: number },
+    datasetKey: { id: number; name: string; description?: string; pathName?: string },
     versionNumber: number = 1,
     dataLakeFileLevel: 'raw' | 'clean' | 'standardized' = 'raw',
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    versionDescription?: string
   ): FilePropertiesDto => {
     const now = new Date().toISOString();
     const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
@@ -143,7 +144,7 @@ export const FileService = {
       customer: customer,
       fileVersion: {
         versionNumber: versionNumber,
-        description: `Version ${versionNumber} of ${file.name}`
+        description: versionDescription || `Version ${versionNumber} of ${file.name}`
       },
       dataLakeFileLevel: dataLakeFileLevel,
       metadata: metadata || {},
