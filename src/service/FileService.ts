@@ -39,6 +39,45 @@ export interface FileUploadRequest {
   fileProperties: FilePropertiesDto;
 }
 
+export interface FileFilterParams {
+  customerId?: number;
+  dataLakeFileLevel?: string;
+  fileName?: string;
+  originalFileName?: string;
+  contentType?: string;
+  fileExtension?: string;
+  datasetKeyId?: number;
+  fileVersionId?: number;
+  folderPath?: string;
+  fullPath?: string;
+  uploadedAtStart?: string;
+  uploadedAtEnd?: string;
+  fileCreatedAtStart?: string;
+  fileCreatedAtEnd?: string;
+  createdAtStart?: string;
+  createdAtEnd?: string;
+  minSizeInBytes?: number;
+  maxSizeInBytes?: number;
+  customerDescription?: string;
+  customerPathName?: string;
+  fileVersionNumber?: number;
+  datasetDescription?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+}
+
+export interface FileListResponse {
+  content: FilePropertiesDto[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 export const FileService = {
   uploadFile: async (file: File, fileProperties: FilePropertiesDto): Promise<string> => {
     const formData = new FormData();
@@ -119,6 +158,21 @@ export const FileService = {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
+    return response.data;
+  },
+
+  filterFiles: async (filters: FileFilterParams): Promise<FileListResponse> => {
+    const params = new URLSearchParams();
+    
+    // Add all filter parameters to the query string
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const url = `${BASE_URL}${config.endpoints.FilePropertiesController.filter}?${params.toString()}`;
+    const response = await axios.get(url);
     return response.data;
   },
 

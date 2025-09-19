@@ -22,6 +22,9 @@ const config = {
       update: (id: number) => `/api/v1/dataset-keys/${id}`,
       delete: (id: number) => `/api/v1/dataset-keys/${id}`,
       search: '/api/v1/dataset-keys/search'
+    },
+    FilePropertiesController: {
+      filter: '/api/v1/file-properties/filter'
     }
   }
 };
