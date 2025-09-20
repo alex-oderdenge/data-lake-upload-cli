@@ -24,10 +24,12 @@ import {
     Alert,
     CircularProgress,
     IconButton,
-    Tooltip
+    Tooltip,
+    Snackbar
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import DownloadIcon from '@mui/icons-material/Download';
 import { FileService, FileFilterParams, FileListResponse, FilePropertiesDto } from '@/service/FileService';
 import { CustomerService, Customer } from '@/service/CustomerService';
 import { DatasetKeyService, DatasetKey } from '@/service/DatasetKeyService';
@@ -54,6 +56,12 @@ export const FileList: React.FC = () => {
     // Reference data
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [datasetKeys, setDatasetKeys] = useState<DatasetKey[]>([]);
+
+    // Toast and loading states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastOpen, setToastOpen] = useState(false);
+    const [toastSeverity, setToastSeverity] = useState<'success' | 'error'>('error');
+    const [downloadingFileId, setDownloadingFileId] = useState<number | null>(null);
 
     // Load reference data on component mount
     useEffect(() => {
@@ -113,6 +121,27 @@ export const FileList: React.FC = () => {
 
     const handleRefresh = () => {
         loadFiles();
+    };
+
+    const handleDownload = async (fileId: number, fileName: string) => {
+        setDownloadingFileId(fileId);
+        try {
+            await FileService.downloadFile(fileId, fileName);
+            setToastMessage(`Arquivo "${fileName}" baixado com sucesso!`);
+            setToastSeverity('success');
+            setToastOpen(true);
+        } catch (error: any) {
+            const errorMessage = error?.response?.data?.message || error?.message || 'Falha ao baixar arquivo';
+            setToastMessage(errorMessage);
+            setToastSeverity('error');
+            setToastOpen(true);
+        } finally {
+            setDownloadingFileId(null);
+        }
+    };
+
+    const handleCloseToast = () => {
+        setToastOpen(false);
     };
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
@@ -308,6 +337,7 @@ export const FileList: React.FC = () => {
                                     <TableCell>Tipo</TableCell>
                                     <TableCell>Data Upload</TableCell>
                                     <TableCell>Versão</TableCell>
+                                    <TableCell>Ações</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -336,6 +366,22 @@ export const FileList: React.FC = () => {
                                         <TableCell>{file.contentType || '-'}</TableCell>
                                         <TableCell>{formatDate(file.uploadedAt)}</TableCell>
                                         <TableCell>{file.fileVersion?.versionNumber || '-'}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title="Baixar arquivo">
+                                                <IconButton
+                                                    onClick={() => handleDownload(file.id!, file.fileName)}
+                                                    color="primary"
+                                                    size="small"
+                                                    disabled={downloadingFileId === file.id}
+                                                >
+                                                    {downloadingFileId === file.id ? (
+                                                        <CircularProgress size={20} />
+                                                    ) : (
+                                                        <DownloadIcon />
+                                                    )}
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -354,6 +400,23 @@ export const FileList: React.FC = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Toast Notification */}
+            <Snackbar
+                open={toastOpen}
+                autoHideDuration={toastSeverity === 'success' ? 4000 : 6000}
+                onClose={handleCloseToast}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleCloseToast}
+                    severity={toastSeverity}
+                    sx={{ width: '100%' }}
+                    variant="filled"
+                >
+                    {toastMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

@@ -5,6 +5,7 @@ import config from "@/config";
 const BASE_URL = config.backendUrl.replace(/\/$/, ""); // trim trailing slash
 
 export interface FilePropertiesDto {
+  id?: number;
   fileName: string;
   originalFileName: string;
   contentType?: string;
@@ -174,6 +175,24 @@ export const FileService = {
     const url = `${BASE_URL}${config.endpoints.FilePropertiesController.filter}?${params.toString()}`;
     const response = await axios.get(url);
     return response.data;
+  },
+
+  downloadFile: async (fileId: number, fileName: string): Promise<void> => {
+    const url = `${BASE_URL}/api/v1/files/download/${fileId}`;
+    const response = await axios.get(url, {
+      responseType: 'blob',
+    });
+    
+    // Create blob URL and trigger download
+    const blob = new Blob([response.data]);
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
   },
 
   // Helper method to create file properties from file and metadata
