@@ -240,7 +240,7 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                     <MenuItem value="">Todos os Clientes</MenuItem>
                                     {customers.map((customer) => (
                                         <MenuItem key={customer.id} value={customer.id}>
-                                            {customer.name}
+                                            {customer.name} ({customer.pathName || 'N/A'})
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -274,7 +274,7 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                     <MenuItem value="">Todas as Chaves</MenuItem>
                                     {datasetKeys.map((datasetKey) => (
                                         <MenuItem key={datasetKey.id} value={datasetKey.id}>
-                                            {datasetKey.name}
+                                            {datasetKey.name} ({datasetKey.pathName || 'N/A'})
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -387,6 +387,7 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                     <TableCell>Tipo</TableCell>
                                     <TableCell>Data Upload</TableCell>
                                     <TableCell>Versão</TableCell>
+                                    <TableCell>Descrição da Versão</TableCell>
                                     <TableCell>Ações</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -430,6 +431,13 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                         <TableCell>{file.contentType || '-'}</TableCell>
                                         <TableCell>{formatDate(file.uploadedAt)}</TableCell>
                                         <TableCell>{file.fileVersion?.versionNumber || '-'}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title={file.fileVersion?.description || 'Sem descrição'}>
+                                                <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                                                    {file.fileVersion?.description || '-'}
+                                                </Typography>
+                                            </Tooltip>
+                                        </TableCell>
                                         <TableCell>
                                             <Tooltip title="Baixar arquivo">
                                                 <IconButton

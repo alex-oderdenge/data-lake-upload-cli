@@ -369,4 +369,4 @@ To learn more about the technologies used:
 - [Axios Documentation](https://axios-http.com/docs/intro) - HTTP client library
 
 
-** This application was built by Alex Oderdenge for Reduza Custo team**
+**This application was built by Alex Oderdenge for Reduza Custo team**

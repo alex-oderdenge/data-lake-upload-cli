@@ -259,7 +259,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                                 >
                                     {customers.map((customer) => (
                                         <MenuItem key={customer.id} value={customer.id}>
-                                            {customer.name}
+                                            {customer.name} ({customer.pathName || 'N/A'})
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -293,7 +293,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                                 >
                                     {datasetKeys.map((datasetKey) => (
                                         <MenuItem key={datasetKey.id} value={datasetKey.id}>
-                                            {datasetKey.name}
+                                            {datasetKey.name} ({datasetKey.pathName || 'N/A'})
                                         </MenuItem>
                                     ))}
                                 </Select>

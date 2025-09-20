@@ -4,6 +4,8 @@ import { useState } from "react";
 import { FileUpload } from "./components/fileUpload";
 import { FileList } from "./components/fileList";
 import { FileDownload } from "./components/fileDownload";
+import { CustomerManagement } from "./components/customerManagement";
+import { DatasetKeyManagement } from "./components/datasetKeyManagement";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,6 +56,8 @@ export default function Home() {
               <Tab label="Upload de Arquivo" />
               <Tab label="Lista de Arquivos" />
               <Tab label="Download por Filtros" />
+              <Tab label="Clientes" />
+              <Tab label="Chaves de Dataset" />
             </Tabs>
           </Box>
           
@@ -78,6 +82,18 @@ export default function Home() {
           <TabPanel value={tabValue} index={2}>
             <Box sx={{ px: 3 }}>
               <FileDownload />
+            </Box>
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={3}>
+            <Box sx={{ px: 3 }}>
+              <CustomerManagement />
+            </Box>
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={4}>
+            <Box sx={{ px: 3 }}>
+              <DatasetKeyManagement />
             </Box>
           </TabPanel>
         </Paper>
