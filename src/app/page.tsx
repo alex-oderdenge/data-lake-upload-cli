@@ -3,6 +3,7 @@ import { Container, Typography, Box, Paper, Tabs, Tab } from "@mui/material";
 import { useState } from "react";
 import { FileUpload } from "./components/fileUpload";
 import { FileList } from "./components/fileList";
+import { FileDownload } from "./components/fileDownload";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,6 +53,7 @@ export default function Home() {
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="data lake tabs">
               <Tab label="Upload de Arquivo" />
               <Tab label="Lista de Arquivos" />
+              <Tab label="Download por Filtros" />
             </Tabs>
           </Box>
           
@@ -70,6 +72,12 @@ export default function Home() {
           <TabPanel value={tabValue} index={1}>
             <Box sx={{ px: 3 }}>
               <FileList />
+            </Box>
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={2}>
+            <Box sx={{ px: 3 }}>
+              <FileDownload />
             </Box>
           </TabPanel>
         </Paper>

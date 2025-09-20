@@ -100,7 +100,25 @@ export const FileList: React.FC = () => {
                 totalPages: response.totalPages
             });
         } catch (error: any) {
-            setError(error?.response?.data?.message || error?.message || 'Failed to load files');
+            console.error('Load files error:', error);
+            
+            // Extract the actual error message from the response
+            let errorMessage = 'Falha ao carregar arquivos';
+            
+            if (error?.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            }
+            
+            // Check if it's a "No file found" error and provide a user-friendly message
+            if (errorMessage.includes('No file found') || errorMessage.includes('not found')) {
+                setError(`Nenhum arquivo encontrado com os filtros aplicados.
+
+Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos critérios selecionados.`);
+            } else {
+                setError(`Erro ao carregar arquivos: ${errorMessage}`);
+            }
         } finally {
             setLoading(false);
         }
@@ -136,8 +154,23 @@ export const FileList: React.FC = () => {
             setToastSeverity('success');
             setToastOpen(true);
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || error?.message || 'Falha ao baixar arquivo';
-            setToastMessage(errorMessage);
+            console.error('Download error:', error);
+            
+            // Extract the actual error message from the response
+            let errorMessage = 'Falha ao baixar arquivo';
+            
+            if (error?.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            }
+            
+            // Check if it's a "No file found" error and provide a user-friendly message
+            if (errorMessage.includes('No file found') || errorMessage.includes('not found')) {
+                setToastMessage(`Arquivo não encontrado. Verifique se o arquivo ainda existe no sistema.`);
+            } else {
+                setToastMessage(`Erro ao baixar arquivo: ${errorMessage}`);
+            }
             setToastSeverity('error');
             setToastOpen(true);
         } finally {
@@ -336,6 +369,7 @@ export const FileList: React.FC = () => {
                                     <TableCell>ID</TableCell>
                                     <TableCell>Nome do Arquivo</TableCell>
                                     <TableCell>Cliente</TableCell>
+                                    <TableCell>Chave de Dataset</TableCell>
                                     <TableCell>Nível</TableCell>
                                     <TableCell>Tamanho</TableCell>
                                     <TableCell>Tipo</TableCell>
@@ -356,6 +390,13 @@ export const FileList: React.FC = () => {
                                             </Tooltip>
                                         </TableCell>
                                         <TableCell>{file.customer?.name || '-'}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title={file.datasetKey?.description || file.datasetKey?.name}>
+                                                <Typography variant="body2" noWrap>
+                                                    {file.datasetKey?.name || '-'}
+                                                </Typography>
+                                            </Tooltip>
+                                        </TableCell>
                                         <TableCell>
                                             <Chip 
                                                 label={file.dataLakeFileLevel} 

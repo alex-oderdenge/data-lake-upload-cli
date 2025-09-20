@@ -195,6 +195,64 @@ export const FileService = {
     window.URL.revokeObjectURL(downloadUrl);
   },
 
+  downloadFileByFilters: async (
+    dataLakeFileLevel: string,
+    customerId: number,
+    datasetKeyId: number,
+    versionNumber: number,
+    fileName: string,
+    month: number,
+    year: number
+  ): Promise<void> => {
+    const params = new URLSearchParams({
+      datalakelevel_id: dataLakeFileLevel,
+      customer_id: customerId.toString(),
+      datasetkey_id: datasetKeyId.toString(),
+      version_code: versionNumber.toString(),
+      fileName: fileName,
+      month: month.toString(),
+      year: year.toString()
+    });
+
+    const url = `${BASE_URL}/api/v1/files/download/by-filters?${params.toString()}`;
+    
+    try {
+      const response = await axios.get(url, {
+        responseType: 'blob',
+      });
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error: any) {
+      // If it's a 500 error, try to extract the error message from the response
+      if (error.response?.status === 500 && error.response?.data) {
+        // The error response might be a blob, so we need to read it as text
+        if (error.response.data instanceof Blob) {
+          const errorText = await error.response.data.text();
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.message || errorText);
+          } catch (parseError) {
+            throw new Error(errorText);
+          }
+        } else {
+          // If it's already JSON
+          throw new Error(error.response.data.message || JSON.stringify(error.response.data));
+        }
+      }
+      // Re-throw the original error if we can't extract a better message
+      throw error;
+    }
+  },
+
   // Helper method to create file properties from file and metadata
   createFileProperties: (
     file: File,
