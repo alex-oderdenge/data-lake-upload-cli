@@ -54,6 +54,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const [versionDescription, setVersionDescription] = useState<string>('');
     const [dataLakeFileLevel, setDataLakeFileLevel] = useState<'raw' | 'clean' | 'standardized'>('raw');
     const [metadata, setMetadata] = useState<Record<string, any>>({});
+    const [confirmationText, setConfirmationText] = useState<string>('');
+    const [showConfirmationField, setShowConfirmationField] = useState<boolean>(false);
 
     // Dialog states
     const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
@@ -85,9 +87,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         }
     };
 
+    const handleDataLakeLevelChange = (level: 'raw' | 'clean' | 'standardized') => {
+        setDataLakeFileLevel(level);
+        if (level === 'raw') {
+            setShowConfirmationField(false);
+            setConfirmationText('');
+        } else {
+            setShowConfirmationField(true);
+        }
+    };
+
     const handleUpload = async () => {
         if (!selectedFile || !selectedCustomer || !selectedDatasetKey) {
             setError('Por favor, selecione um arquivo, cliente e chave de dataset');
+            return;
+        }
+
+        if (dataLakeFileLevel !== 'raw' && confirmationText !== 'tenhocertezadosriscos') {
+            setError('Para níveis diferentes de RAW, você deve digitar "tenhocertezadosriscos" para confirmar');
             return;
         }
 
@@ -322,7 +339,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                                     <InputLabel>Nível do Arquivo no Data Lake</InputLabel>
                                     <Select
                                         value={dataLakeFileLevel}
-                                        onChange={(e) => setDataLakeFileLevel(e.target.value as 'raw' | 'clean' | 'standardized')}
+                                        onChange={(e) => handleDataLakeLevelChange(e.target.value as 'raw' | 'clean' | 'standardized')}
                                         label="Nível do Arquivo no Data Lake"
                                     >
                                         <MenuItem value="raw">RAW</MenuItem>
@@ -341,6 +358,26 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                                     multiline
                                     rows={2}
                                 />
+                            )}
+                            
+                            {dataLakeFileLevel !== 'raw' && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Alert severity="warning" sx={{ mb: 2 }}>
+                                        <Typography variant="body2">
+                                            <strong>Atenção:</strong> Os níveis CLEAN e STANDARDIZED são destinados exclusivamente para scripts de pipeline de dados. 
+                                            O upload manual para estes níveis pode causar conflitos na migração de dados e deve ser evitado.
+                                        </Typography>
+                                    </Alert>
+                                    <TextField
+                                        fullWidth
+                                        label="Confirmação de Risco"
+                                        placeholder="Digite 'tenhocertezadosriscos' para confirmar"
+                                        value={confirmationText}
+                                        onChange={(e) => setConfirmationText(e.target.value)}
+                                        helperText="Você deve digitar exatamente 'tenhocertezadosriscos' para prosseguir com o upload"
+                                        error={confirmationText !== '' && confirmationText !== 'tenhocertezadosriscos'}
+                                    />
+                                </Box>
                             )}
                         </Box>
                     </CardContent>
