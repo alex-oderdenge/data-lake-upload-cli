@@ -33,6 +33,8 @@ export interface FilePropertiesDto {
     pathName?: string;
   };
   uploadedMonth?: string;
+  folderPath?: string;
+  fullPath?: string;
 }
 
 export interface FileUploadRequest {

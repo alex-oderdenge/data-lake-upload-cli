@@ -300,6 +300,16 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                 variant="outlined"
                             />
                         </Grid>
+                        <Grid item xs={12} sm={6} md={4} sx={{ minWidth: 240 }}> 
+                            <TextField
+                                fullWidth
+                                label="Caminho Completo"
+                                value={filters.fullPath || ''}
+                                onChange={(e) => handleFilterChange('fullPath', e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                variant="outlined"
+                            />
+                        </Grid>
 
                         {/* Third Row */}
                         <Grid item xs={12} sm={6} md={6} sx={{ minWidth: 240 }}> 
@@ -312,6 +322,7 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                 >
                                     <MenuItem value="id">ID</MenuItem>
                                     <MenuItem value="fileName">Nome do Arquivo</MenuItem>
+                                    <MenuItem value="fullPath">Caminho Completo</MenuItem>
                                     <MenuItem value="uploadedAt">Data de Upload</MenuItem>
                                     <MenuItem value="sizeInBytes">Tamanho</MenuItem>
                                 </Select>
@@ -368,6 +379,7 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                 <TableRow>
                                     <TableCell>ID</TableCell>
                                     <TableCell>Nome do Arquivo</TableCell>
+                                    <TableCell>Caminho Completo</TableCell>
                                     <TableCell>Cliente</TableCell>
                                     <TableCell>Chave de Dataset</TableCell>
                                     <TableCell>Nível</TableCell>
@@ -386,6 +398,13 @@ Tente ajustar os filtros ou verificar se existem arquivos que correspondem aos c
                                             <Tooltip title={file.originalFileName}>
                                                 <Typography variant="body2" noWrap>
                                                     {file.fileName}
+                                                </Typography>
+                                            </Tooltip>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Tooltip title={file.fullPath || file.folderPath || 'Caminho não disponível'}>
+                                                <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                                                    {file.fullPath || file.folderPath || '-'}
                                                 </Typography>
                                             </Tooltip>
                                         </TableCell>
