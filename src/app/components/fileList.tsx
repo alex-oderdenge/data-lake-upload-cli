@@ -69,6 +69,11 @@ export const FileList: React.FC = () => {
         loadFiles();
     }, []);
 
+    // Load files when filters change (including page changes)
+    useEffect(() => {
+        loadFiles();
+    }, [filters]);
+
     const loadReferenceData = async () => {
         try {
             const [customersResponse, datasetKeysResponse] = await Promise.all([
@@ -146,7 +151,6 @@ export const FileList: React.FC = () => {
 
     const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
         setFilters(prev => ({ ...prev, page: page - 1 }));
-        setPagination(prev => ({ ...prev, page: page - 1 }));
     };
 
     const formatFileSize = (bytes: number) => {
