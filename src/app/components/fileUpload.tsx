@@ -19,11 +19,15 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Collapse,
+    Grid
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import AddIcon from '@mui/icons-material/Add';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { FileService, FilePropertiesDto } from '@/service/FileService';
 import { CustomerService, Customer } from '@/service/CustomerService';
 import { DatasetKeyService, DatasetKey } from '@/service/DatasetKeyService';
@@ -56,6 +60,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const [metadata, setMetadata] = useState<Record<string, any>>({});
     const [confirmationText, setConfirmationText] = useState<string>('');
     const [showConfirmationField, setShowConfirmationField] = useState<boolean>(false);
+    
+    // Advanced fields state
+    const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+    const [uploadedAt, setUploadedAt] = useState<string>('');
+    const [fileCreatedAt, setFileCreatedAt] = useState<string>('');
+    const [uploadedMonth, setUploadedMonth] = useState<string>('');
+    const [folderPath, setFolderPath] = useState<string>('');
+    const [fullPath, setFullPath] = useState<string>('');
 
     // Dialog states
     const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
@@ -97,6 +109,25 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         }
     };
 
+    const calculateMonthFromDate = (dateString: string): string => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const months = [
+            'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+            'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+        ];
+        return months[date.getMonth()];
+    };
+
+    const handleUploadDateChange = (dateString: string) => {
+        setUploadedAt(dateString);
+        if (dateString) {
+            setUploadedMonth(calculateMonthFromDate(dateString));
+        } else {
+            setUploadedMonth('');
+        }
+    };
+
     const handleUpload = async () => {
         if (!selectedFile || !selectedCustomer || !selectedDatasetKey) {
             setError('Por favor, selecione um arquivo, cliente e chave de dataset');
@@ -130,6 +161,23 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 metadata,
                 versionDescription
             );
+
+            // Override with advanced fields if provided
+            if (uploadedAt) {
+                fileProperties.uploadedAt = uploadedAt;
+            }
+            if (fileCreatedAt) {
+                fileProperties.fileCreatedAt = fileCreatedAt;
+            }
+            if (uploadedMonth) {
+                fileProperties.uploadedMonth = uploadedMonth;
+            }
+            if (folderPath) {
+                fileProperties.folderPath = folderPath;
+            }
+            if (fullPath) {
+                fileProperties.fullPath = fullPath;
+            }
 
             const result = await FileService.uploadFile(selectedFile, fileProperties);
             onUploadSuccess?.(result);
@@ -380,6 +428,99 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                                 </Box>
                             )}
                         </Box>
+                    </CardContent>
+                </Card>
+
+                {/* Advanced Section */}
+                <Card>
+                    <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                                Configurações Avançadas
+                            </Typography>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                endIcon={showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                size="small"
+                            >
+                                {showAdvanced ? 'Ocultar' : 'Mostrar'}
+                            </Button>
+                        </Box>
+                        
+                        <Collapse in={showAdvanced}>
+                            <Box sx={{ mt: 2 }}>
+                                <Alert severity="warning" sx={{ mb: 2 }}>
+                                    <Typography variant="body2">
+                                        <strong>Atenção:</strong> Esta seção avançada deve ser usada apenas se você souber o que está fazendo. 
+                                        Alterar estes valores pode causar problemas na organização e migração de dados. 
+                                        Use apenas se tiver conhecimento técnico adequado.
+                                    </Typography>
+                                </Alert>
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    <Typography variant="body2">
+                                        <strong>Informação:</strong> Estes campos são opcionais. Se não preenchidos, 
+                                        valores padrão serão utilizados automaticamente.
+                                    </Typography>
+                                </Alert>
+                                
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Data de Upload"
+                                            type="datetime-local"
+                                            value={uploadedAt}
+                                            onChange={(e) => handleUploadDateChange(e.target.value)}
+                                            helperText="Data e hora quando o arquivo foi enviado (padrão: agora)"
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Data de Criação do Arquivo"
+                                            type="datetime-local"
+                                            value={fileCreatedAt}
+                                            onChange={(e) => setFileCreatedAt(e.target.value)}
+                                            helperText="Data e hora quando o arquivo foi criado (padrão: agora)"
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Mês de Upload"
+                                            value={uploadedMonth || 'Calculado automaticamente'}
+                                            InputProps={{
+                                                readOnly: true,
+                                            }}
+                                            helperText="Calculado automaticamente baseado na data de upload"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Caminho da Pasta"
+                                            value={folderPath}
+                                            onChange={(e) => setFolderPath(e.target.value)}
+                                            placeholder="Ex: /data/raw/customer1"
+                                            helperText="Caminho da pasta onde o arquivo será armazenado"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            fullWidth
+                                            label="Caminho Completo"
+                                            value={fullPath}
+                                            onChange={(e) => setFullPath(e.target.value)}
+                                            placeholder="Ex: /data/raw/customer1/dataset1/file.csv"
+                                            helperText="Caminho completo do arquivo (inclui pasta + nome do arquivo)"
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        </Collapse>
                     </CardContent>
                 </Card>
 
