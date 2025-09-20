@@ -21,7 +21,9 @@ const config = {
       get: (id: number) => `/api/v1/dataset-keys/${id}`,
       update: (id: number) => `/api/v1/dataset-keys/${id}`,
       delete: (id: number) => `/api/v1/dataset-keys/${id}`,
-      search: '/api/v1/dataset-keys/search'
+      search: '/api/v1/dataset-keys/search',
+      emptyDatasetKeys: '/api/v1/dataset-keys/empty-dataset-keys',
+      datasetKeysWithFiles: '/api/v1/dataset-keys/dataset-keys-with-files'
     },
     FilePropertiesController: {
       filter: '/api/v1/file-properties/filter'

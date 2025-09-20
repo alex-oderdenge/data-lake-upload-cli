@@ -13,6 +13,11 @@ export interface DatasetKey {
   updatedAt?: string;
 }
 
+export interface DatasetKeyWithFiles extends DatasetKey {
+  fileNames: string[];
+  fileCount: number;
+}
+
 export interface DatasetKeyCreateRequest {
   name: string;
   description?: string;
@@ -61,6 +66,20 @@ export const DatasetKeyService = {
   // Search dataset keys
   searchDatasetKeys: async (query: string): Promise<DatasetKey[]> => {
     const url = `${BASE_URL}${config.endpoints.DatasetKeyController.search}?name=${encodeURIComponent(query)}`;
+    const response = await axios.get(url);
+    return response.data;
+  },
+
+  // Get empty dataset keys for a customer and data lake level
+  getEmptyDatasetKeys: async (customerId: number, dataLakeFileLevel: string, year: number, month: number): Promise<DatasetKey[]> => {
+    const url = `${BASE_URL}${config.endpoints.DatasetKeyController.emptyDatasetKeys}?customerId=${customerId}&dataLakeFileLevel=${encodeURIComponent(dataLakeFileLevel)}&year=${year}&month=${month}`;
+    const response = await axios.get(url);
+    return response.data;
+  },
+
+  // Get dataset keys with files for a customer and data lake level
+  getDatasetKeysWithFiles: async (customerId: number, dataLakeFileLevel: string, year: number, month: number): Promise<DatasetKeyWithFiles[]> => {
+    const url = `${BASE_URL}${config.endpoints.DatasetKeyController.datasetKeysWithFiles}?customerId=${customerId}&dataLakeFileLevel=${encodeURIComponent(dataLakeFileLevel)}&year=${year}&month=${month}`;
     const response = await axios.get(url);
     return response.data;
   }

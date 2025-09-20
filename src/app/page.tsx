@@ -6,6 +6,7 @@ import { FileList } from "./components/fileList";
 import { FileDownload } from "./components/fileDownload";
 import { CustomerManagement } from "./components/customerManagement";
 import { DatasetKeyManagement } from "./components/datasetKeyManagement";
+import { EmptyDatasetKeys } from "./components/emptyDatasetKeys";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -58,6 +59,7 @@ export default function Home() {
               <Tab label="Download por Filtros" />
               <Tab label="Clientes" />
               <Tab label="Chaves de Dataset" />
+              <Tab label="Dataset Keys Pendentes" />
             </Tabs>
           </Box>
           
@@ -94,6 +96,12 @@ export default function Home() {
           <TabPanel value={tabValue} index={4}>
             <Box sx={{ px: 3 }}>
               <DatasetKeyManagement />
+            </Box>
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={5}>
+            <Box sx={{ px: 3 }}>
+              <EmptyDatasetKeys />
             </Box>
           </TabPanel>
         </Paper>
