@@ -5,18 +5,16 @@ A modern Next.js web application for uploading files to a Data Lake with compreh
 ## 🚀 Features
 
 - **File Upload with Metadata**: Upload files with comprehensive metadata using the new DTO parameter structure
-- **Customer Management**: Create and manage customers with full CRUD operations
-- **Dataset Key Management**: Create and manage dataset keys linked to customers
 - **File Versioning**: Track file versions with automatic version numbering
-- **Data Lake File Levels**: Support for raw, clean, and standardized file levels
 - **Modern UI**: Built with Material-UI for a professional user experience
-- **Real-time Feedback**: Toast notifications and progress indicators
+- **File List Management**: View, download, and manage uploaded files
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ## 📋 Prerequisites
 
 - **Node.js 18+**
 - **npm, yarn, pnpm, or bun**
-- **Data Lake Gateway API** running on `http://localhost:8080`
+- **Data Lake Gateway API** running on `http://localhost:8087`
 
 ## 🚀 Getting Started
 
@@ -56,17 +54,10 @@ The application now supports uploading files with comprehensive metadata using t
 
 The file upload endpoint now expects **individual form fields** instead of a JSON string for the file properties. This change was made to fix Spring Boot conversion errors.
 
-**New Format**: Each property is sent as a separate form field using dot notation for nested objects (e.g., `customer.id`, `fileVersion.versionNumber`).
-
-**Important Type Conversions**:
-- `dataLakeFileLevel`: Must be uppercase (RAW, CLEAN, STANDARDIZED)
-- `uploadedAt`/`fileCreatedAt`: Must be in LocalDateTime format (YYYY-MM-DDTHH:mm:ss)
-- `fileVersion.id`: Omitted if null/undefined (backend auto-generates)
-
 #### Example API Request Format
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/files/upload \
+curl -X POST http://localhost:8087/api/v1/files/upload \
   -F "file=@/path/to/test.csv" \
   -F "fileName=test_file.csv" \
   -F "originalFileName=original.csv" \
@@ -136,9 +127,9 @@ interface FilePropertiesDto {
 
 ### Data Lake File Levels
 
-- **Raw**: Raw data exactly as received from the source
-- **Clean**: Data that has been converted or unified for easier processing
-- **Standardized**: Harmonized data ready for consumption and integration
+- **RAW**: Raw data exactly as received from the source
+- **CLEAN**: Data that has been converted or unified for easier processing
+- **STANDARDIZED**: Harmonized data ready for consumption and integration
 
 ### Version Management
 
@@ -184,7 +175,7 @@ When uploading files with version numbers higher than 1, a version description f
 
 ## 🔧 API Integration
 
-The application integrates with the Data Lake Gateway API running on `http://localhost:8080`. The following endpoints are used:
+The application integrates with the Data Lake Gateway API running on `http://localhost:8087`. The following endpoints are used:
 
 ### File Upload
 - **POST** `/api/v1/files/upload` - Upload file with metadata
@@ -209,7 +200,7 @@ The application configuration is located in `src/config.ts`:
 
 ```typescript
 const config = {
-  backendUrl: 'http://localhost:8080',  // Data Lake Gateway API URL
+  backendUrl: 'http://localhost:8087',  // Data Lake Gateway API URL
   endpoints: {
     FileController: {
       upload: '/api/v1/files/upload'
@@ -238,24 +229,68 @@ The application features a modern, responsive interface with:
 - **Real-time Feedback**: Toast notifications for success and error states
 - **Progress Indicators**: Visual feedback during file uploads
 - **Form Validation**: Input validation and error handling
+- **Theme Support**: Dark and light theme with system preference detection
+- **File Management**: Comprehensive file list with download and metadata viewing
+- **Search and Filter**: Advanced filtering capabilities for files and entities
+
+## 🎨 Theme Support
+
+The application includes comprehensive theme support:
+
+- **System Preference Detection**: Automatically detects user's system theme preference
+- **Manual Theme Toggle**: Users can manually switch between light and dark themes
+- **Persistent Theme**: Theme preference is saved and restored across sessions
+- **Material-UI Integration**: Full integration with Material-UI's theming system
+
+## 📁 File Management Features
+
+### File List View
+- **Comprehensive File Display**: Shows all uploaded files with metadata
+- **Download Functionality**: Direct download links for all files
+- **Metadata Display**: View detailed file properties and metadata
+- **Search and Filter**: Filter files by customer, dataset key, file level, and more
+- **Pagination**: Efficient handling of large file lists
+
+### File Upload Process
+1. **File Selection**: Choose files from local system
+2. **Metadata Configuration**: Set customer, dataset key, and file properties
+3. **Version Management**: Handle file versioning with descriptions
+4. **Progress Tracking**: Real-time upload progress with visual indicators
+5. **Success Confirmation**: Immediate feedback on successful uploads
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
 1. **Backend Connection Issues**
-   - Ensure the Data Lake Gateway API is running on `http://localhost:8080`
+   - Ensure the Data Lake Gateway API is running on `http://localhost:8087`
    - Check the backend URL in `src/config.ts`
 
 2. **File Upload Failures**
    - Verify that a customer and dataset key are selected
    - Check that the file is not too large
+   - Check if you have permission to the file you are trying to upload
+   - Ensure the backend API is accessible
+
+3. **File Download Failures**
+   - Verify that the file exists in the data lake
+   - Check if you have permission to the file you are trying to download
    - Ensure the backend API is accessible
 
 3. **Customer/Dataset Creation Issues**
    - Verify all required fields are filled
-   - Check that the customer email is valid
+   - Check that the customer name is unique
    - Ensure the dataset key name is unique
+
+4. **Theme Issues**
+   - Clear browser cache if theme switching doesn't work
+   - Check browser console for JavaScript errors
+   - Ensure Material-UI components are properly loaded
+
+5. **File Upload Issues**
+   - Check file size limits (100MB max)
+   - Verify file format is supported
+   - Ensure stable internet connection
 
 ### Error Messages
 
@@ -264,6 +299,8 @@ The application provides detailed error messages for:
 - Backend API errors
 - Network connectivity issues
 - Validation errors
+- File upload failures
+- Theme loading issues
 
 ## 🚀 Deployment
 
@@ -291,6 +328,36 @@ pnpm start
 bun start
 ```
 
+## 🛠️ Development
+
+### Project Structure
+
+```
+src/
+├── app/
+│   ├── components/          # React components
+│   │   ├── fileUpload.tsx   # File upload component
+│   │   ├── fileList.tsx     # File list and management
+│   │   ├── fileDownload.tsx # File download functionality
+│   │   └── ThemeProvider.tsx # Theme management
+│   ├── globals.css          # Global styles
+│   ├── layout.tsx           # Root layout component
+│   └── page.tsx             # Main page component
+├── config.ts                # Application configuration
+└── service/                 # API service layer
+    ├── CustomerService.ts   # Customer API calls
+    ├── DatasetKeyService.ts # Dataset key API calls
+    └── FileService.ts       # File management API calls
+```
+
+### Key Technologies
+
+- **Next.js 14**: React framework with App Router
+- **TypeScript**: Type-safe JavaScript development
+- **Material-UI (MUI)**: Component library and design system
+- **React Hook Form**: Form handling and validation
+- **Axios**: HTTP client for API communication
+
 ## 📚 Learn More
 
 To learn more about the technologies used:
@@ -298,15 +365,8 @@ To learn more about the technologies used:
 - [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
 - [Material-UI Documentation](https://mui.com/) - Learn about Material-UI components
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Learn about TypeScript
+- [React Hook Form](https://react-hook-form.com/) - Form handling library
+- [Axios Documentation](https://axios-http.com/docs/intro) - HTTP client library
 
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+** This application was built by Alex Oderdenge for Reduza Custo team**
