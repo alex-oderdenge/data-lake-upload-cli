@@ -13,10 +13,21 @@ import {
     Button, 
     Alert,
     CircularProgress,
-    Snackbar
+    Snackbar,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Chip,
+    Tooltip,
+    IconButton
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import { FileService } from '@/service/FileService';
+import SearchIcon from '@mui/icons-material/Search';
+import { FileService, FilePropertiesDto } from '@/service/FileService';
 import { CustomerService, Customer } from '@/service/CustomerService';
 import { DatasetKeyService, DatasetKey } from '@/service/DatasetKeyService';
 
@@ -27,6 +38,8 @@ export const FileDownload: React.FC = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [datasetKeys, setDatasetKeys] = useState<DatasetKey[]>([]);
     const [loadingData, setLoadingData] = useState(true);
+    const [fileProperties, setFileProperties] = useState<FilePropertiesDto | null>(null);
+    const [downloadingFileId, setDownloadingFileId] = useState<number | null>(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -73,7 +86,7 @@ export const FileDownload: React.FC = () => {
         }));
     };
 
-    const handleDownload = async () => {
+    const handleSearch = async () => {
         if (!formData.customerId || !formData.datasetKeyId || !formData.fileName) {
             setError('Por favor, preencha todos os campos obrigatórios');
             return;
@@ -82,8 +95,9 @@ export const FileDownload: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
+            setFileProperties(null);
             
-            await FileService.downloadFileByFilters(
+            const fileProps = await FileService.getLatestFileByFilters(
                 formData.dataLakeFileLevel,
                 parseInt(formData.customerId),
                 parseInt(formData.datasetKeyId),
@@ -93,12 +107,13 @@ export const FileDownload: React.FC = () => {
                 formData.year
             );
             
-            setSuccess('Arquivo baixado com sucesso!');
+            setFileProperties(fileProps);
+            setSuccess('Arquivo encontrado! Você pode baixá-lo usando o botão abaixo.');
         } catch (err: any) {
-            console.error('Download error:', err);
+            console.error('Search error:', err);
             
             // Extract the actual error message from the response
-            let errorMessage = 'Erro ao baixar arquivo';
+            let errorMessage = 'Erro ao buscar arquivo';
             
             if (err.response?.data?.message) {
                 errorMessage = err.response.data.message;
@@ -107,7 +122,7 @@ export const FileDownload: React.FC = () => {
             }
             
             // Check if it's a "No file found" error
-            if (errorMessage.includes('No file found with filters')) {
+            if (errorMessage.includes('No file found') || err.response?.status === 404) {
                 const monthNames = [
                     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -124,16 +139,52 @@ export const FileDownload: React.FC = () => {
 
 Verifique se o arquivo existe com esses parâmetros ou tente outros valores.`);
             } else {
-                setError("Erro ao baixar arquivo: " + errorMessage);
+                setError("Erro ao buscar arquivo: " + errorMessage);
             }
         } finally {
             setLoading(false);
         }
     };
 
+    const handleDownload = async (fileId: number, fileName: string) => {
+        setDownloadingFileId(fileId);
+        try {
+            await FileService.downloadFile(fileId, fileName);
+            setSuccess(`Arquivo "${fileName}" baixado com sucesso!`);
+        } catch (error: any) {
+            console.error('Download error:', error);
+            
+            // Extract the actual error message from the response
+            let errorMessage = 'Falha ao baixar arquivo';
+            
+            if (error?.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            }
+            
+            setError(`Erro ao baixar arquivo: ${errorMessage}`);
+        } finally {
+            setDownloadingFileId(null);
+        }
+    };
+
     const handleCloseSnackbar = () => {
         setError(null);
         setSuccess(null);
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
     if (loadingData) {
@@ -282,13 +333,13 @@ Verifique se o arquivo existe com esses parâmetros ou tente outros valores.`);
                         <Box>
                             <Button
                                 variant="contained"
-                                startIcon={<DownloadIcon />}
-                                onClick={handleDownload}
+                                startIcon={<SearchIcon />}
+                                onClick={handleSearch}
                                 disabled={loading || !formData.customerId || !formData.datasetKeyId || !formData.fileName}
                                 size="large"
                                 fullWidth
                             >
-                                {loading ? 'Baixando...' : 'Baixar Arquivo'}
+                                {loading ? 'Buscando...' : 'Buscar Arquivo'}
                             </Button>
                         </Box>
                     </Box>
@@ -299,6 +350,84 @@ Verifique se o arquivo existe com esses parâmetros ou tente outros valores.`);
                 <Alert severity="error" sx={{ mt: 2 }}>
                     {error}
                 </Alert>
+            )}
+
+            {fileProperties && (
+                <Card sx={{ mt: 3 }}>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>
+                            Arquivo Encontrado
+                        </Typography>
+                        <TableContainer component={Paper}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>ID</TableCell>
+                                        <TableCell>Nome do Arquivo</TableCell>
+                                        <TableCell>Cliente</TableCell>
+                                        <TableCell>Dataset Key</TableCell>
+                                        <TableCell>Nível</TableCell>
+                                        <TableCell>Tamanho</TableCell>
+                                        <TableCell>Tipo</TableCell>
+                                        <TableCell>Data Upload</TableCell>
+                                        <TableCell>Versão</TableCell>
+                                        <TableCell>Ações</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>{fileProperties.id}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title={fileProperties.originalFileName}>
+                                                <Typography variant="body2" noWrap>
+                                                    {fileProperties.fileName}
+                                                </Typography>
+                                            </Tooltip>
+                                        </TableCell>
+                                        <TableCell>{fileProperties.customer?.name || '-'}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title={fileProperties.datasetKey?.description || fileProperties.datasetKey?.name}>
+                                                <Typography variant="body2" noWrap>
+                                                    {fileProperties.datasetKey?.name || '-'}
+                                                </Typography>
+                                            </Tooltip>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip 
+                                                label={fileProperties.dataLakeFileLevel} 
+                                                color={
+                                                    fileProperties.dataLakeFileLevel === 'raw' ? 'default' :
+                                                    fileProperties.dataLakeFileLevel === 'clean' ? 'primary' : 'secondary'
+                                                }
+                                                size="small"
+                                            />
+                                        </TableCell>
+                                        <TableCell>{formatFileSize(fileProperties.sizeInBytes)}</TableCell>
+                                        <TableCell>{fileProperties.contentType || '-'}</TableCell>
+                                        <TableCell>{formatDate(fileProperties.uploadedAt)}</TableCell>
+                                        <TableCell>{fileProperties.fileVersion?.versionNumber || '-'}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title="Baixar arquivo">
+                                                <IconButton
+                                                    onClick={() => handleDownload(fileProperties.id!, fileProperties.fileName)}
+                                                    color="primary"
+                                                    size="small"
+                                                    disabled={downloadingFileId === fileProperties.id}
+                                                >
+                                                    {downloadingFileId === fileProperties.id ? (
+                                                        <CircularProgress size={20} />
+                                                    ) : (
+                                                        <DownloadIcon />
+                                                    )}
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </CardContent>
+                </Card>
             )}
 
             <Snackbar
